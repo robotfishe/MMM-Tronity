@@ -23,9 +23,6 @@ Module.register("MMM-Tronity", {
   },
 
   carData: {},
-  idSuffix: '',
-  intervalId: 0,
-  ticksInitilized: false,
 
 
   init: function () {
