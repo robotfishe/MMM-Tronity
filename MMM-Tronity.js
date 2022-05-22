@@ -25,6 +25,7 @@ Module.register("MMM-Tronity", {
   carData: {},
   intervalId: 0,
 
+
   init: function () {
     Log.log("MMM-Tronity is initialising");
   },
@@ -35,7 +36,6 @@ Module.register("MMM-Tronity", {
   start: function () {
     Log.info(this.name + ' is starting');
     this.sendSocketNotification('SET_CONFIG', this.config);
-    this.idSuffix = 'fuelLevel' + this.identifier;
   },
 
   /**
@@ -161,26 +161,16 @@ Module.register("MMM-Tronity", {
   },
 
 
-  /**
-   * Notification received event
-   * @param {string} notification Notification name
-   * @param {Object} payload Payload object
-   * @param {Module} sender MM Module which sent notification
-   */
   notificationReceived: function (notification, payload, sender) {
     if (notification === 'UPDATE_CAR_DATA') {
       this.sendSocketNotification('GET_CAR_DATA');
     }
     else if (notification === 'MODULE_DOM_CREATED') {
-      this.initTicks();
+      this.updateDom();
     }
   },
 
-  /**
-   * Socket notification received event
-   * @param {string} notification Notification name
-   * @param {Object} payload Payload object
-   */
+
   socketNotificationReceived: function (notification, payload) {
     let self = this;
 	console.log('Notification from helper: ' + notification);
@@ -196,9 +186,6 @@ Module.register("MMM-Tronity", {
     }
     else if (notification === 'MMM_TRONITY_READY') {
       Log.debug('MMM-Tronity is Ready');
-      document.querySelectorAll('.two-dial-wrapper').forEach(function (e) {
-        e.style.display = 'block';
-      });
       self.updateData();
       self.startLoop();
     }
@@ -230,6 +217,7 @@ Module.register("MMM-Tronity", {
     if (self.intervalId != 0) return;
     self.intervalId = window.setInterval(() => {
       self.updateData();
+	  self.updateDom();
     }, this.config.updateInterval);
   },
 
@@ -240,22 +228,5 @@ Module.register("MMM-Tronity", {
     Log.debug('Update data');
     this.sendSocketNotification('GET_CAR_DATA', { vehicleId: this.config.vehicleId });
   },
-
-  /**
-   * Shows startup sequence in singleDial display style
-   */
-  initTicks() {
-    var time = 0;
-    for (var i = 0; i <= document.getElementsByClassName('tick').length; i++) {
-      window.setTimeout(function displayTicks(tick, i, ctx) {
-        if (tick) tick.style.display = 'block';
-        if (i === 50) {
-          ctx.ticksInitilized = true;
-          ctx.updateData();
-        }
-      }, time, document.getElementsByClassName('tick')[50 - i], i, this);
-      time += 50;
-    }
-  }
 
 });
