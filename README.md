@@ -3,7 +3,7 @@ Pull charging and range data from your EV via Tronity Platform.
 
 Installation:
 
-Run git pull https://github.com/robotfishe/MMM-Tronity.git
+Run git clone https://github.com/robotfishe/MMM-Tronity.git
 <br>Run npm install
 
 Configuration:
