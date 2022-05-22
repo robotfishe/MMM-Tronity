@@ -17,7 +17,6 @@ Module.register("MMM-Tronity", {
   defaults: {
     text: 'Tronity',
     updateInterval: 5 * 60 * 1000,
-    displayStyle: 'singleDial',
     metricRange: true,
 	map: true,
 	mapboxStyle: "satellite-streets-v11"
