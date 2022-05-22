@@ -23,7 +23,7 @@ Module.register("MMM-Tronity", {
   },
 
   carData: {},
-
+  intervalId: 0,
 
   init: function () {
     Log.log("MMM-Tronity is initialising");
