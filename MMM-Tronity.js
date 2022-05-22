@@ -6,11 +6,6 @@
  * MIT license
  */
  
- var range = 0;
- var plugged = false;
- var level = 0;
- var kW = 0;
- 
 Module.register("MMM-Tronity", {
   
   requiresVersion: '2.14.0',
@@ -65,14 +60,19 @@ Module.register("MMM-Tronity", {
 
   getDom: function () {
 	  var self = this;
-	  if (this.config.metricRange == true) {
-		  range = this.carData.body.range;
+	  if (this.carData.body == null) {
+		  const wrapper = document.createElement("div");
+		  wrapper.innerHTML = "Initialising MMM-Tronity...";
+		  return wrapper;
 	  } else {
-		  range = Math.round(this.carData.body.range * 0.62);
+	  if (this.config.metricRange == true) {
+		  var range = this.carData.body.range;
+	  } else {
+		  var range = Math.round(this.carData.body.range * 0.62);
 	  };
-	  level = this.carData.body.level;
-	  plugged = this.carData.body.plugged;
-	  kW = this.carData.body.charging;
+	  var level = this.carData.body.level;
+	  var plugged = this.carData.body.plugged;
+	  var kW = this.carData.body.charging;
 	  
 	  var blue = '#009BF3';
 	  var green = '#07D800';
@@ -158,6 +158,7 @@ Module.register("MMM-Tronity", {
 	}
 
 	return wrapper;
+	}
   },
 
 
@@ -180,16 +181,16 @@ Module.register("MMM-Tronity", {
 	
     //if (payload && payload.identifier !== this.identifier) return;
 
-    if (notification === 'GET_CONFIG') {
+    if (notification == 'GET_CONFIG') {
       Log.debug('Get config received');
       this.sendSocketNotification('SET_CONFIG', this.config);
     }
-    else if (notification === 'MMM_TRONITY_READY') {
+    else if (notification == 'MMM_TRONITY_READY') {
       Log.debug('MMM-Tronity is Ready');
       self.updateData();
       self.startLoop();
     }
-    else if (notification === 'UPDATE_CAR_DATA') {
+    else if (notification == 'UPDATE_CAR_DATA') {
       Log.debug('Update car data');
       self.carData = payload;
       //if (self.config.displayStyle.toLowerCase() === 'singledial') {
@@ -225,7 +226,7 @@ Module.register("MMM-Tronity", {
    * Updates vehicle data
    */
   updateData() {
-    Log.debug('Update data');
+    console.log('Requesting vehicle data from node_helper');
     this.sendSocketNotification('GET_CAR_DATA', { vehicleId: this.config.vehicleId });
   },
 

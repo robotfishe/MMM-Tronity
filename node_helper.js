@@ -12,9 +12,9 @@ module.exports = NodeHelper.create({
     debug: false
   },
   config: {
-	  clientId: 'clientId',
-	  clientSecret: 'clientSecret',
-	  vehicleId: 'vehicleId'
+	  clientId: '',
+	  clientSecret: '',
+	  vehicleId: ''
   },
 
   start: function () {
@@ -22,12 +22,12 @@ module.exports = NodeHelper.create({
   },
 
 
-  getAuth: function () {
+  getAuth: function (vehicleId) {
    var self = this;
 	  
-	  this.debug('Authenticating via url ' + authUrl);
-	  this.debug('Using client ID ' + this.config.clientId);
-	  this.debug('and client secret ' + this.config.clientSecret);
+	  console.log('Authenticating via url ' + authUrl);
+	  console.log('Using client ID ' + this.config.clientId);
+	  console.log('and client secret ' + this.config.clientSecret);
 	  
       const options = {
         url: authUrl,
@@ -42,47 +42,65 @@ module.exports = NodeHelper.create({
 
       request(options, function (error, response, body) {
         if (!error) {
-			self.debug('Response status code ' + response.statusCode);
+			console.log('Response status code ' + response.statusCode);
 			//self.debug('Received response ' + JSON.stringify(response));
           if (response.statusCode == 201) {
 			//const obj = JSON.parse(response);
             authToken = response.body.access_token;
-            self.debug('Got auth token ' + authToken);
+            console.log('Got auth token ' + authToken);
+			self.getVehicleData(vehicleId);
           }
           else {
             console.log(response.statusCode + ' - ' + response.statusMessage);
           }
         } else if (error) {
-		  self.debug(error);
           console.log(error);
         }
       });
-
+	  console.log('Completed auth token request');
+	  return;
   },
 
   socketNotificationReceived: function (notification, payload) {
     var self = this;
-	this.debug('Socket notification received ' + notification);
+	console.log('Socket notification received ' + notification);
 	
-	if (self.config.clientId == "clientID") {
-		self.debug('Config info missing!')
+	if (notification == 'SET_CONFIG') {
+      this.config = Object.assign(this.defaults, payload);
+      self.sendSocketNotification('MMM_TRONITY_READY');
+	  return;
+    }
+	
+	if (self.config.clientId.length < 2) {
+		console.log('Config info missing!')
         self.sendSocketNotification('GET_CONFIG');
         return;
     }
-	
-    if (notification === 'SET_CONFIG') {
-      this.config = Object.assign(this.defaults, payload);
-      self.sendSocketNotification('MMM_TRONITY_READY');
-    }
-    else if (notification === 'GET_CAR_DATA') {
+
+    else if (notification == 'GET_CAR_DATA') {
 	  if (authToken == null) {
-		  self.debug('No auth token!');
-		  self.getAuth();
-		  return;
+		  console.log('No auth token!');
+		  self.getAuth(payload);
+	  } else {
+		  self.getVehicleData(payload);
 	  }
-      var apiUrl = this.getVehicleDataUrl(payload);
-      self.debug('Vehicle data url ' + apiUrl);
-      if (apiUrl.length === 0) {
+	  return;
+    }
+  },
+
+  getVehicleDataUrl: function (config) {
+	console.log('vehicle ID' + this.config.vehicleId);
+    if (this.config && !this.config.vehicleId) return '';
+    if (!config) return '';
+    var url = vehicleDataUrl.replace('VEHICLE_ID', this.config.vehicleId);
+    return url;
+  },
+  
+  getVehicleData: function (vehicleId) {
+	  var self = this;
+	  var apiUrl = this.getVehicleDataUrl(vehicleId);
+      console.log('Vehicle data url ' + apiUrl);
+      if (apiUrl.length == 0) {
         self.sendSocketNotification('GET_CONFIG');
         return;
       }
@@ -94,16 +112,16 @@ module.exports = NodeHelper.create({
           'Authorization': 'Bearer ' + authToken
         }
       };
-		self.debug('Sending GET request with auth token: ' + authToken);
+		console.log('Sending GET request with auth token: ' + authToken);
       request(options, function (error, response, body) {
         if (!error) {
-			self.debug('Response status code ' + response.statusCode);
+			console.log('Response status code ' + response.statusCode);
           if (response.statusCode == 200) {
             self.sendSocketNotification('UPDATE_CAR_DATA', response);
 			//self.debug('Received response: ' + JSON.stringify(response));
           }
 		  else if (response.statusCode == 401) {
-			  self.debug('Unauthorised! Renewing auth token.');
+			  console.log('Unauthorised! Renewing auth token.');
 			  self.getAuth();
 			  return;
           } else {
@@ -113,18 +131,8 @@ module.exports = NodeHelper.create({
           console.log(error);
         }
       });
-    }
+	  
   },
-
-
-  getVehicleDataUrl: function (config) {
-	this.debug('vehicle ID' + this.config.vehicleId);
-    if (this.config && !this.config.vehicleId) return '';
-    if (!config) return '';
-    var url = vehicleDataUrl.replace('VEHICLE_ID', this.config.vehicleId);
-    return url;
-  },
-
 
   debug: function (msg) {
     var shouldLog = true;
