@@ -1,6 +1,6 @@
 {
   "name": "MMM-Tronity",
-  "version": "0.0.1",
+  "version": "0.5.1",
   "description": "Connect to Tronity Platform for real-time data from your electric vehicle",
   "main": "MMM-Tronity.js",
   "scripts": {
