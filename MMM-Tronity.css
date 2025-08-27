@@ -1,42 +1,4 @@
 @import url("https://use.fontawesome.com/releases/v6.1.1/css/all.css");
-
-.dialText {
-  display: block;
-  position: absolute;
-  left: 33%;
-  width:34%;
-  height:150px;
-  top: 0;
-  font-size: 50px;
-  color: white;
-	text-align:center;
-	vertical-align:middle;
-}
-
-.leftText {
-	display:block;
-	position:absolute;
-	left:0;
-	width:33%;
-	top:0;
-	height:150px;
-	font-size:30px;
-	color:#bbbbbb;
-	text-align:center;
-	vertical-align:middle;
-}
-
-.rightText {
-	display:block;
-	position:absolute;
-	left:67%;
-	width:33%;
-	top:0;
-	height:150px;
-	font-size:40px;
-	color:#bbbbbb;
-	text-align:center;
-	vertical-align:middle;
 }
 .centred{
 	display:block;
@@ -48,13 +10,20 @@
 }
 
 #can{
-	padding-left:50px;
-	width:300px;
+	position:absolute;
 }
 
 #wrapper {
   position: relative;
-  width: 400px;
-  height: 360px;
   margin-top:18px;
+}
+
+.canCell {
+	text-align: center;
+}
+
+.iconCell {
+	text-align: center;
+	width: 2rem;
+	padding-right: 0.2rem;
 }
