@@ -14,7 +14,8 @@ Module.register("MMM-Tronity", {
     updateInterval: 5 * 60 * 1000,
     metricRange: true,
 	map: true,
-	mapboxStyle: "satellite-streets-v11"
+	mapboxStyle: "satellite-streets-v11",
+	width: 360
   },
 
   carData: {},
@@ -72,7 +73,7 @@ Module.register("MMM-Tronity", {
 	  };
 	  var level = this.carData.body.level;
 	  var plugged = this.carData.body.plugged;
-	  var kW = this.carData.body.charging;
+	  var kW = (Math.round(parseFloat((this.carData.body.chargerPower * 100).toFixed(10))) / 100).toFixed(1);
 	  
 	  var blue = '#009BF3';
 	  var green = '#07D800';
@@ -80,67 +81,96 @@ Module.register("MMM-Tronity", {
 	  var red = '#E00000';
 	  
 	console.log("Creating Tronity div");
-	const wrapper = document.createElement("div");
+	const wrapper = document.createElement("table");
+	const rowOne = document.createElement("tr");
+	const rowTwo = document.createElement("tr");
+	const canCell = document.createElement("td");
+	canCell.setAttribute("rowspan","2");
 	const can = document.createElement("canvas");
 	can.id = "can";
-	const dialText = document.createElement("div");
-	const leftText = document.createElement("div");
-	const rightText = document.createElement("div");
-	var c = can.getContext('2d');
+	wrapper.appendChild(can);
+	const rangeCell = document.createElement("td");
+	const chargeCell = document.createElement("td");
+	const rangeIconCell = document.createElement("td");
+	const chargeIconCell = document.createElement("td");
+	const c = can.getContext('2d');
 	
-	  var posX = can.width / 2,
-      posY = can.height / 2,
-      percent = level,
-      onePercent = 360 / 100,
-      degrees = onePercent * level;
+	can.width = .4*this.config.width;
+	can.height = .4*this.config.width;
+	
+	var posX = can.width / 2,
+    posY = can.height / 2,
+    onePercent = 360 / 100,
+    degrees = onePercent * level;
   
-  c.lineCap = 'round';
-      c.clearRect( 0, 0, can.width, can.height );
-      percent = degrees / onePercent;
+	c.lineCap = 'round';
+    c.clearRect( 0, 0, can.width, can.height );
+    percent = degrees / onePercent;
 
-      dialText.innerHTML = `<span class="centred">` + level + `%</span>`;
+    canCell.innerHTML = `<span class="medium bright">` + level + `%</span>`;
 
-      c.beginPath();
-      c.arc( posX, posY, 70, (Math.PI/180) * 270, (Math.PI/180) * (270 + 360) );
-      c.strokeStyle = '#444444';
-      c.lineWidth = '10';
-      c.stroke();
+    c.beginPath();
+    c.arc( posX, posY, can.width/2-5, (Math.PI/180) * 270, (Math.PI/180) * (270 + 360) );
+    c.strokeStyle = '#444444';
+    c.lineWidth = '8';
+    c.stroke();
 
-      c.beginPath();
-	  if (plugged == true) {
+    c.beginPath();
+	if (plugged == true) {
 		c.strokeStyle = blue;
-	  } else if (level >= 80) {
+	} else if (level >= 80) {
 		  c.strokeStyle = green;
-	  } else if (level >= 30) {
+	} else if (level >= 30) {
 		  c.strokeStyle = yellow;
-	  } else {
+	} else {
 		  c.strokeStyle = red;
-	  };
-      c.lineWidth = '10';
-      c.arc( posX, posY, 70, (Math.PI/180) * 270, (Math.PI/180) * (270 + degrees) );
-      c.stroke();
+	};
+    c.lineWidth = '10';
+    c.arc( posX, posY, can.width/2-5, (Math.PI/180) * 270, (Math.PI/180) * (270 + degrees) );
+    c.stroke();
+	
+	rangeIconCell.innerHTML = `<span class = "fa fa-fw fa-road"></span>`;
 	
 	if (this.config.metricRange == true) {
-		leftText.innerHTML = `<span class="centred"><span class = "fa fa-fw fa-arrow-right" style="font-size:70%;margin-bottom:9px"></span><span class = "fa fa-fw fa-charging-station" style="font-size:70%;margin-bottom:9px"></span><br>` + range + `<br><span style="font-size:70%">km</span></span>`;
+		rangeCell.innerHTML = range + `km`;
 	} else {
-		leftText.innerHTML = `<span class="centred"><span class = "fa fa-fw fa-arrow-right" style="font-size:70%;margin-bottom:9px"></span><span class = "fa fa-fw fa-charging-station" style="font-size:70%;margin-bottom:9px"></span><br>` + range + `<br><span style="font-size:70%">miles</span></span>`;
+		rangeCell.innerHTML = range + ` miles`;
 	};
 	
+	chargeIconCell.innerHTML = `<span class="fa fa-fw fa-bolt"></span>`
+
 	if (plugged == true) {
-		rightText.innerHTML = `<span class="centred"><span class="fa fa-fw fa-bolt"></span><br><span style="font-size:70%">` + kW + ` kW</span></span>`;
-		
+		if (kW>=1) {
+			chargeCell.innerHTML = `Charging ` + kW + ` kW</span>`;
+			chargeCell.classList.add("bright");
+			chargeIconCell.classList.add("bright");
+		} else {
+			chargeCell.innerHTML = `Plugged in`;
+		};
 	} else {
-		rightText.innerHTML = `<span class="centred"><span class="fa fa-fw fa-bolt" style="color:#333333"></span></span>`;
+		chargeCell.innerHTML = `Unplugged`;
+		chargeCell.classList.add("dimmed");
+		chargeIconCell.classList.add("dimmed");
 	}
 	
-	wrapper.appendChild(can);
-	wrapper.appendChild(leftText);
-	wrapper.appendChild(dialText);
-	wrapper.appendChild(rightText);
+	wrapper.appendChild(rowOne);
+	wrapper.style.width=this.config.width;
+	rowOne.appendChild(canCell);
+	canCell.style.width=can.width+"px";
+	canCell.style.height=can.width+"px";
+	canCell.classList.add("canCell");
+	rowOne.appendChild(rangeIconCell);
+	rangeIconCell.classList.add("iconCell");
+	rowOne.appendChild(rangeCell);
+	//rangeCell.style.width=this.config.width-can.width+"px";
+	//rangeCell.style.height="75px";
+	wrapper.appendChild(rowTwo);
+	rowTwo.appendChild(chargeIconCell);
+	chargeIconCell.classList.add("iconCell");
+	rowTwo.appendChild(chargeCell);
+	//chargeCell.style.width=this.config.width-can.width+"px";
+	chargeCell.style.height="75px";
 	wrapper.id = "wrapper";
-	dialText.setAttribute("class","dialText");
-	leftText.setAttribute("class","leftText");
-	rightText.setAttribute("class","rightText");
 	
 	if (this.config.map == true) {
 		
